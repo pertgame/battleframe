@@ -1,7 +1,7 @@
 package game
 
 import (
-	"common/myWebSocket"
+	"battle/common/myWebSocket"
 	"fmt"
 )
 
@@ -10,12 +10,12 @@ const (
 )
 
 var (
-	_gm = map[int]myWebSocket.WsCallback {
+	_gm = map[int]myWebSocket.WsCallback{
 		GMID_resetStarPos: resetStarPos,
 	}
 )
 
-func GetGMFunc(gmid int)myWebSocket.WsCallback{
+func GetGMFunc(gmid int) myWebSocket.WsCallback {
 	return _gm[gmid]
 }
 
@@ -27,13 +27,13 @@ func resetStarPos(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	)
 	if uint32(Pos_Right) != data[0] {
 		pos.Nodex -= int(data[1])
-	}else{
+	} else {
 		pos.Nodex = int(data[1])
 	}
 
 	if uint32(Pos_Right) != data[2] {
 		pos.Nodey -= int(data[3])
-	}else{
+	} else {
 		pos.Nodey = int(data[3])
 	}
 	entityptr.SetPos(pos)

@@ -1,32 +1,34 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"encoding/binary"
+
 	//"math/rand"
-	"time"
 	"strconv"
+	"time"
+
 	//"github.com/gomodule/redigo/redis"
-	"common"
+	"battle/common"
 )
 
-func init(){
-	
+func init() {
+
 }
 
 var (
-	_RandN int
-	_StarRandN int
+	_RandN        int
+	_StarRandN    int
 	cstRandNumber = string("RandNumber")
 )
 
-func init(){
+func init() {
 
 }
 
-func BeginBattleHandler(rsp http.ResponseWriter, req *http.Request){
+func BeginBattleHandler(rsp http.ResponseWriter, req *http.Request) {
 	_RandN = int(time.Now().Unix())
 	//SetCache(cstRandNumber, _RandN)
 	sranN := strconv.Itoa(_RandN)
@@ -38,7 +40,7 @@ func BeginBattleHandler(rsp http.ResponseWriter, req *http.Request){
 	}
 }
 
-func AttackHandler(rsp http.ResponseWriter, req *http.Request){
+func AttackHandler(rsp http.ResponseWriter, req *http.Request) {
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		fmt.Println(fmt.Errorf("read http request fail, err: %v.", err))
@@ -47,14 +49,14 @@ func AttackHandler(rsp http.ResponseWriter, req *http.Request){
 
 	var pos int
 	datalen := binary.LittleEndian.Uint16(data[pos:])
-	pos+=2
+	pos += 2
 
 	var (
-		params = []uint16{}	
+		params = []uint16{}
 	)
-	for i:=uint16(0); i < datalen; i++ {
+	for i := uint16(0); i < datalen; i++ {
 		param := binary.LittleEndian.Uint16(data[pos:])
-		pos+=2
+		pos += 2
 
 		params = append(params, param)
 	}
@@ -63,7 +65,7 @@ func AttackHandler(rsp http.ResponseWriter, req *http.Request){
 		fmt.Println("invalid params: ", params)
 		return
 	}
-	
+
 	// _RandN, err = redis.Int(GetCache(cstRandNumber))
 	// if err != nil {
 	// 	fmt.Println("redis get fail, err: ", err)
@@ -77,7 +79,7 @@ func AttackHandler(rsp http.ResponseWriter, req *http.Request){
 	}
 }
 
-func UpdateStarPosHandler(rsp http.ResponseWriter, req *http.Request){
+func UpdateStarPosHandler(rsp http.ResponseWriter, req *http.Request) {
 	data, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		fmt.Println(fmt.Errorf("read http request fail, err: %v.", err))
@@ -86,14 +88,14 @@ func UpdateStarPosHandler(rsp http.ResponseWriter, req *http.Request){
 
 	var pos int
 	datalen := binary.LittleEndian.Uint16(data[pos:])
-	pos+=2
+	pos += 2
 
 	var (
-		params = []uint16{}	
+		params = []uint16{}
 	)
-	for i:=uint16(0); i < datalen; i++ {
+	for i := uint16(0); i < datalen; i++ {
 		param := binary.LittleEndian.Uint16(data[pos:])
-		pos+=2
+		pos += 2
 
 		params = append(params, param)
 	}

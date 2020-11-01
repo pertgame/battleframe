@@ -10,28 +10,27 @@ package game
 */
 
 import (
-	"time"
-	"common/myWebSocket"
+	"battle/common/myWebSocket"
 	"fmt"
+	"time"
 )
 
 type LogicFrame struct {
-	
 }
 
 var (
 	GLogicFrame *LogicFrame = &LogicFrame{}
 )
 
-func (this *LogicFrame) Run(){
+func (this *LogicFrame) Run() {
 	go this.loopFrame()
 }
 
 /*
 	取得全服玩家数据进行广播（带上帧数）
 */
-func (this *LogicFrame) loopFrame(){
-	tick := time.NewTicker( time.Duration( 70*time.Millisecond ))
+func (this *LogicFrame) loopFrame() {
+	tick := time.NewTicker(time.Duration(70 * time.Millisecond))
 	for {
 		<-tick.C
 		BroadcastAllMosterInfo()
@@ -41,9 +40,9 @@ func (this *LogicFrame) loopFrame(){
 /*
 	服务器逻辑帧驱动广播
 */
-func BroadcastAllMosterInfo(){
+func BroadcastAllMosterInfo() {
 	return
-	
+
 	allplayers := GetGlobalPurpleMonsters().GetAll()
 	if len(allplayers) == 0 {
 		return
@@ -52,11 +51,11 @@ func BroadcastAllMosterInfo(){
 	var (
 		dstmsg = []uint32{}
 	)
-	for id, state := range allplayers{
+	for id, state := range allplayers {
 		if state == MosterState_Offline {
 			continue
 		}
-		
+
 		moster := GetPurpleMonsterByID(id)
 		if moster == nil {
 			continue
@@ -78,13 +77,13 @@ func BroadcastAllMosterInfo(){
 			posYflag = Pos_Left
 			posY = 0 - posY
 		}
-		
+
 		dstmsg = append(dstmsg, uint32(posXflag))
 		dstmsg = append(dstmsg, uint32(posX))
 		dstmsg = append(dstmsg, uint32(posYflag))
 		dstmsg = append(dstmsg, uint32(posY))
 		dstmsg = append(dstmsg, uint32(id))
-		
+
 		myWebSocket.BroadCastMsgExceptID(myWebSocket.MID_LogicFrameSync, dstmsg)
 		dstmsg = []uint32{}
 	}
@@ -93,17 +92,17 @@ func BroadcastAllMosterInfo(){
 /*
 	广播其他人的位置给我
  	客户端消息驱动
- */
-func BroadcastOtherMosterInfo2Me(sess *myWebSocket.WebSession, myId uint32, msgid int){
+*/
+func BroadcastOtherMosterInfo2Me(sess *myWebSocket.WebSession, myId uint32, msgid int) {
 	allplayers := GetGlobalPurpleMonsters().GetAll()
 	var (
 		dstmsg = []uint32{}
 	)
-	for id, state := range allplayers{
+	for id, state := range allplayers {
 		if state == MosterState_Offline {
 			continue
 		}
-		
+
 		moster := GetPurpleMonsterByID(id)
 		if moster == nil {
 			continue
@@ -114,7 +113,7 @@ func BroadcastOtherMosterInfo2Me(sess *myWebSocket.WebSession, myId uint32, msgi
 		}
 
 		//不把自己的信息发给自己
-		if id == myId{
+		if id == myId {
 			continue
 		}
 
@@ -130,7 +129,7 @@ func BroadcastOtherMosterInfo2Me(sess *myWebSocket.WebSession, myId uint32, msgi
 			posYflag = Pos_Left
 			posY = 0 - posY
 		}
-		
+
 		dstmsg = append(dstmsg, uint32(posXflag))
 		dstmsg = append(dstmsg, uint32(posX))
 		dstmsg = append(dstmsg, uint32(posYflag))

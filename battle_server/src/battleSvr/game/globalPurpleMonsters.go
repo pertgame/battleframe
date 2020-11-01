@@ -7,9 +7,9 @@ package game
 import (
 	//"common"
 	//"sync"
-	"common/AsyncLock"
-	"common/rediscache"
-	"common/cache"
+	"battle/common/AsyncLock"
+	"battle/common/rediscache"
+	"battle/common/cache"
 )
 
 type GlobalPurpleMonsters struct {

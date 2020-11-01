@@ -1,7 +1,7 @@
 package game
 
 import (
-	"common/myWebSocket"
+	"battle/common/myWebSocket"
 	"fmt"
 )
 
@@ -14,6 +14,6 @@ func MainGM(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	return nil, true
 }
 
-func init(){
-	
+func init() {
+
 }

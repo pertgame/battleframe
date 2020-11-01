@@ -2,9 +2,10 @@ package cache
 
 import (
 	//"reflect"
+	"battle/common/rediscache"
 	"fmt"
+
 	"github.com/globalsign/mgo/bson"
-	"common/rediscache"
 )
 
 /*
@@ -20,9 +21,9 @@ func GetDecodeCache(identify string, v interface{}) (err error, succ bool) {
 	err = bson.Unmarshal(data.([]byte), v)
 	succ = true
 	return
-}	
+}
 
-func SetEncodeCache(identify string, v interface{})(err error){
+func SetEncodeCache(identify string, v interface{}) (err error) {
 	data, err := bson.Marshal(v)
 	if err != nil {
 		err = fmt.Errorf("bson marshal err, key: ", identify)
@@ -34,14 +35,14 @@ func SetEncodeCache(identify string, v interface{})(err error){
 	return
 }
 
-/* 
+/*
 	---------------------非数据加密部分-----------------
 */
-func GetCache(identify string) (v interface{}, err error){
+func GetCache(identify string) (v interface{}, err error) {
 	v = GMemCache.Get(identify)
 	if v == nil {
 		v, err = rediscache.GetCache(identify)
-	}else{
+	} else {
 		err = nil
 	}
 	return

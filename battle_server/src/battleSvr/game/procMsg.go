@@ -1,25 +1,26 @@
 package game
 
 import (
-	"common/myWebSocket"
+	"battle/common/myWebSocket"
 	"fmt"
+
 	//"strings"
-	"strconv"
+	"battle/common"
 	"math"
+	"strconv"
 	"time"
-	"common"
 )
 
- /**
-	* 回复消息解析 
-	* 0: 消息id
-	* 1：消息长度
-	* 2：sessionid
-	* 3：nodex x坐标正负标记
-	* 4：nodex x坐标值
-	* 5：nodey y坐标正负标记
-	* 6：nodey y坐标值 
-*/
+/**
+* 回复消息解析
+* 0: 消息id
+* 1：消息长度
+* 2：sessionid
+* 3：nodex x坐标正负标记
+* 4：nodex x坐标值
+* 5：nodey y坐标正负标记
+* 6：nodey y坐标值
+ */
 
 func saveAndupdatePos(sess *myWebSocket.WebSession, msgid int, data []uint32) (error, bool) {
 	var (
@@ -27,23 +28,23 @@ func saveAndupdatePos(sess *myWebSocket.WebSession, msgid int, data []uint32) (e
 	)
 	if uint32(Pos_Right) != data[0] {
 		pos.Nodex -= int(data[1])
-	}else{
+	} else {
 		pos.Nodex = int(data[1])
 	}
 
 	if uint32(Pos_Right) != data[2] {
 		pos.Nodey -= int(data[3])
-	}else{
+	} else {
 		pos.Nodey = int(data[3])
 	}
-	
+
 	fmt.Printf("update pos, RemoteAddr: %v, Nodex: %v, Nodey: %v.\n", sess.RemoteAddr, pos.Nodex, pos.Nodey)
 	//保存个体怪物数据
 	moster := GetPurpleMonsterByID(data[4])
 	if moster != nil {
 		moster.SetPos(pos)
 		moster.UpdateCache()
-	}else{
+	} else {
 		fmt.Println("can not get moster info, id: ", data[4])
 	}
 
@@ -63,11 +64,11 @@ func saveAndupdatePos(sess *myWebSocket.WebSession, msgid int, data []uint32) (e
 func Register(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	fmt.Println("proc Register message ... ", time.Now().Unix())
 	defer common.ExceptionStack()
-	
+
 	sname := strconv.Itoa(int(data[0]))
 	spwd := strconv.Itoa(int(data[1]))
-	moster, succ := NewMoster(sname, spwd) 
-	if !succ{
+	moster, succ := NewMoster(sname, spwd)
+	if !succ {
 		return registerfail(sess)
 	}
 
@@ -75,7 +76,7 @@ func Register(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	return registerSucc(sess)
 }
 
-func registerfail(sess *myWebSocket.WebSession)(error, bool) {
+func registerfail(sess *myWebSocket.WebSession) (error, bool) {
 	var (
 		dstmsg = []uint32{}
 	)
@@ -84,7 +85,7 @@ func registerfail(sess *myWebSocket.WebSession)(error, bool) {
 	return nil, true
 }
 
-func registerSucc(sess *myWebSocket.WebSession)(error, bool) {
+func registerSucc(sess *myWebSocket.WebSession) (error, bool) {
 	var (
 		dstmsg = []uint32{}
 	)
@@ -129,7 +130,7 @@ func loginfail(sess *myWebSocket.WebSession) (error, bool) {
 
 func loginSucc(sess *myWebSocket.WebSession, moster *PurpleMonster) (error, bool) {
 	var (
-		loginmsg = []uint32{}
+		loginmsg     = []uint32{}
 		monsterXflag = uint32(Pos_Right)
 		monsterYflag = uint32(Pos_Right)
 
@@ -148,16 +149,16 @@ func loginSucc(sess *myWebSocket.WebSession, moster *PurpleMonster) (error, bool
 		monsterX = uint32(0 - pos.Nodex)
 	}
 
-	loginmsg = append(loginmsg, monsterXflag )
-	loginmsg = append(loginmsg, monsterX )
+	loginmsg = append(loginmsg, monsterXflag)
+	loginmsg = append(loginmsg, monsterX)
 	monsterY = uint32(pos.Nodey)
 	if pos.Nodey < 0 {
 		monsterYflag = uint32(Pos_Left)
 		monsterY = uint32(0 - pos.Nodey)
 	}
-	loginmsg = append(loginmsg, monsterYflag )
-	loginmsg = append(loginmsg, monsterY )
-	loginmsg = append(loginmsg, score )
+	loginmsg = append(loginmsg, monsterYflag)
+	loginmsg = append(loginmsg, monsterY)
+	loginmsg = append(loginmsg, score)
 	fmt.Println("login message succ: ", id, monsterX, monsterY, time.Now().Unix())
 	myWebSocket.SendMsg(sess, myWebSocket.MID_login, loginmsg)
 	return nil, true
@@ -185,7 +186,7 @@ func SyncPos(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 */
 func Logout(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	fmt.Println("proc logout message ... ", time.Now().Unix())
-	
+
 	gmonsters := GetGlobalPurpleMonsters()
 	gmonsters.Offline(data[0])
 	gmonsters.UpdateCache()
@@ -260,7 +261,7 @@ func Bump(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	if data[6] != uint32(Pos_Right) {
 		EntityPosY = 0.0 - EntityPosY
 	}
-	result := math.Sqrt(math.Pow(PurpleMonsterPosX-EntityPosX,2) + math.Pow(PurpleMonsterPosY-EntityPosY,2))
+	result := math.Sqrt(math.Pow(PurpleMonsterPosX-EntityPosX, 2) + math.Pow(PurpleMonsterPosY-EntityPosY, 2))
 	if result > float64(60) { //小于此值则碰撞成功
 		return bumpfail(sess)
 	}
@@ -276,7 +277,7 @@ func Bump(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 		moster.UpdateCache()
 		//同步信息
 		syncMonsterInfo(sess, data[8], score)
-	}else{
+	} else {
 		fmt.Println("can not get moster info, id: ", data[4])
 	}
 
@@ -286,14 +287,14 @@ func Bump(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	}
 
 	//2.则重新放置星星位置
-	entity,_ := GetEntity()
+	entity, _ := GetEntity()
 	newPos := entity.RandEntityPos(originPos)
 	//3.广播给所有玩家
 	bumpsucc(sess, newPos, data[8])
 	return nil, true
 }
 
-func syncMonsterInfo(sess *myWebSocket.WebSession, id, score uint32){
+func syncMonsterInfo(sess *myWebSocket.WebSession, id, score uint32) {
 	var (
 		msg = []uint32{}
 	)
@@ -303,7 +304,7 @@ func syncMonsterInfo(sess *myWebSocket.WebSession, id, score uint32){
 	myWebSocket.SendMsg(sess, myWebSocket.MID_MonsterInfo, msg)
 }
 
-func bumpsucc(sess *myWebSocket.WebSession, newpos *Pos, monsterId uint32)(error, bool){
+func bumpsucc(sess *myWebSocket.WebSession, newpos *Pos, monsterId uint32) (error, bool) {
 	fmt.Println("bump succ: ", sess.RemoteAddr, newpos.Nodex, newpos.Nodey, time.Now().Unix())
 	var (
 		succmsg = []uint32{}
@@ -320,21 +321,21 @@ func bumpsucc(sess *myWebSocket.WebSession, newpos *Pos, monsterId uint32)(error
 		starXflag = uint32(Pos_Left)
 		starX = uint32(0 - newpos.Nodex)
 	}
-	succmsg = append(succmsg, starXflag )
-	succmsg = append(succmsg, starX )
+	succmsg = append(succmsg, starXflag)
+	succmsg = append(succmsg, starX)
 	starY = uint32(newpos.Nodey)
 	if newpos.Nodey < 0 {
 		starYflag = uint32(Pos_Left)
 		starY = uint32(0 - newpos.Nodey)
 	}
-	succmsg = append(succmsg, starYflag )
-	succmsg = append(succmsg, starY )
+	succmsg = append(succmsg, starYflag)
+	succmsg = append(succmsg, starY)
 	succmsg = append(succmsg, monsterId)
 	myWebSocket.BroadCastMsgExceptSession(sess, true, myWebSocket.MID_Bump, succmsg)
 	return nil, true
 }
 
-func bumpfail(sess *myWebSocket.WebSession)(error, bool){
+func bumpfail(sess *myWebSocket.WebSession) (error, bool) {
 	fmt.Println("bump fail: ", sess.RemoteAddr)
 	var (
 		failmsg = make([]uint32, 1)
@@ -345,7 +346,7 @@ func bumpfail(sess *myWebSocket.WebSession)(error, bool){
 	return nil, true
 }
 
-func Reg(){
+func Reg() {
 	fmt.Println("reg proc msg.")
 	myWebSocket.MsgRegister(myWebSocket.MID_Register, Register)
 	myWebSocket.MsgRegister(myWebSocket.MID_login, Login)

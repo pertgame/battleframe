@@ -5,15 +5,16 @@ package game
 */
 
 import (
-	"common"
-	"time"
+	"battle/common"
+	"battle/common/myWebSocket"
 	"math"
-	"common/myWebSocket"
+	"time"
+
 	//"sync"
+	"battle/common/AsyncLock"
+	"battle/common/cache"
+	"battle/common/rediscache"
 	"fmt"
-	"common/AsyncLock"
-	"common/rediscache"
-	"common/cache"
 	//"github.com/globalsign/mgo/bson"
 )
 
@@ -27,11 +28,11 @@ const (
 	module_entity = string("EntityStar")
 )
 
-func (this *Entity) Identify() string{
+func (this *Entity) Identify() string {
 	return module_entity
 }
 
-func GetEntity()(this *Entity, new bool){
+func GetEntity() (this *Entity, new bool) {
 	this = &Entity{}
 	this.StrIdentify = module_entity
 	err, succ := cache.GetDecodeCache(this.Identify(), this)
@@ -47,7 +48,7 @@ func GetEntity()(this *Entity, new bool){
 			},
 		}
 
-		err := cache.SetEncodeCache(this.Identify(),this)
+		err := cache.SetEncodeCache(this.Identify(), this)
 		if err != nil {
 			panic(err)
 		}
@@ -56,19 +57,18 @@ func GetEntity()(this *Entity, new bool){
 	return
 }
 
-
-func (this *Entity) UpdateCache(){
+func (this *Entity) UpdateCache() {
 	err := cache.SetEncodeCache(this.Identify(), this)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (this *Entity) rand1(timeRandSeed int){
+func (this *Entity) rand1(timeRandSeed int) {
 	randX := common.RandOne(timeRandSeed)
-	this.Epos.Nodex = int(float64(randX - 0.2)*float64(maxWidth))
-	if this.Epos.Nodex > (maxWidth/2) {
-		this.Epos.Nodex = (maxWidth/2)
+	this.Epos.Nodex = int(float64(randX-0.2) * float64(maxWidth))
+	if this.Epos.Nodex > (maxWidth / 2) {
+		this.Epos.Nodex = (maxWidth / 2)
 	}
 
 	if this.Epos.Nodex < (0 - maxWidth/2) {
@@ -76,12 +76,12 @@ func (this *Entity) rand1(timeRandSeed int){
 	}
 }
 
-func (this *Entity) rand2(origin *Pos){
+func (this *Entity) rand2(origin *Pos) {
 	var (
-		hasEqual bool	//是否存在相同的
-		dstNoEnough bool
-		maxloop = 100	//最大循环次数
-		loopcount int	
+		hasEqual     bool //是否存在相同的
+		dstNoEnough  bool
+		maxloop      = 100 //最大循环次数
+		loopcount    int
 		timeRandSeed = int(time.Now().Unix())
 	)
 
@@ -90,7 +90,7 @@ func (this *Entity) rand2(origin *Pos){
 		this.rand1(timeRandSeed)
 		if origin != nil {
 			//调整上一次和最新位置距离，太小了会帖在一起相当于没动一样
-			if math.Abs(math.Abs(float64(origin.Nodex)) - float64(this.Epos.Nodex)) < float64(100) {
+			if math.Abs(math.Abs(float64(origin.Nodex))-float64(this.Epos.Nodex)) < float64(100) {
 				timeRandSeed = int(time.Now().Unix()) + 1
 				continue
 			}
@@ -110,13 +110,13 @@ func (this *Entity) rand2(origin *Pos){
 				continue
 			}
 
-			if this.Epos.Nodex == moster.Mypos.Nodex{
+			if this.Epos.Nodex == moster.Mypos.Nodex {
 				hasEqual = true
 				break
 			}
-			
+
 			//判断离上一次球间距，不得小于60
-			result := math.Sqrt(math.Pow(float64(moster.Mypos.Nodex - this.Epos.Nodex),2) + math.Pow(float64(moster.Mypos.Nodey - this.Epos.Nodey),2))
+			result := math.Sqrt(math.Pow(float64(moster.Mypos.Nodex-this.Epos.Nodex), 2) + math.Pow(float64(moster.Mypos.Nodey-this.Epos.Nodey), 2))
 			if result <= float64(100) { //小于此值则碰撞了
 				timeRandSeed = int(time.Now().Unix()) + 1
 				dstNoEnough = true
@@ -125,7 +125,7 @@ func (this *Entity) rand2(origin *Pos){
 		}
 
 		loopcount++
-		if !hasEqual && !dstNoEnough{
+		if !hasEqual && !dstNoEnough {
 			break
 		}
 
@@ -141,7 +141,7 @@ func (this *Entity) rand2(origin *Pos){
 	}
 }
 
-func (this *Entity) RandEntityPos(origin *Pos)*Pos{
+func (this *Entity) RandEntityPos(origin *Pos) *Pos {
 
 	//多协程处理数据
 	AsyncLock.AddZKLock("global", module_entity)
@@ -160,24 +160,24 @@ func (this *Entity) RandEntityPos(origin *Pos)*Pos{
 	return this.Epos
 }
 
-func (this *Entity) IsFirstCreate()bool{
+func (this *Entity) IsFirstCreate() bool {
 	return this.Epos.Nodey == 0
 }
 
-func (this *Entity) SetPos(newpos *Pos){
+func (this *Entity) SetPos(newpos *Pos) {
 	this.Epos = newpos
 }
 
-func SyncStarPos(sess *myWebSocket.WebSession){
+func SyncStarPos(sess *myWebSocket.WebSession) {
 	var (
-		dstmsg = []uint32{}
+		dstmsg  = []uint32{}
 		starpos *Pos
-	) 
+	)
 
 	entityptr, bnew := GetEntity()
 	if bnew {
 		starpos = entityptr.RandEntityPos(nil)
-	}else{
+	} else {
 		starpos = entityptr.Epos
 	}
 
