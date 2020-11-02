@@ -261,6 +261,7 @@ func Bump(sess *myWebSocket.WebSession, data []uint32) (error, bool) {
 	if data[6] != uint32(Pos_Right) {
 		EntityPosY = 0.0 - EntityPosY
 	}
+	//平面坐标下，2个点之间的距离公式
 	result := math.Sqrt(math.Pow(PurpleMonsterPosX-EntityPosX, 2) + math.Pow(PurpleMonsterPosY-EntityPosY, 2))
 	if result > float64(60) { //小于此值则碰撞成功
 		return bumpfail(sess)

@@ -109,6 +109,7 @@ func (this *WebSession) readloop() {
 			data:        data,
 		}
 
+		//这里go出去了？不保证消息顺序处理？
 		go this.read()
 	}
 }
